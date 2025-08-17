@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 
 function Navbar() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
@@ -42,8 +42,8 @@ function Navbar() {
 
   const navItems = (
     <>
-      <li><a href="/">Home</a></li>
-      <li><a href="/Course">Course</a></li>
+      <li><Link to="/">Home</Link></li> {/* Changed from <a> to <Link> */}
+      <li><Link to="/Course">Course</Link></li> {/* Changed from <a> to <Link> */}
       <li><a>Contact</a></li>
       <li><a>About</a></li>
     </>
@@ -97,11 +97,11 @@ function Navbar() {
         {/* Dark Theme Toggle */}
         <div>
           <label className="toggle toggle-sm text-base-content">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               checked={theme === "dark"}
               onChange={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="theme-controller" 
+              className="theme-controller"
             />
             <svg
               aria-label="sun"
