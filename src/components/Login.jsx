@@ -1,0 +1,120 @@
+import React from "react";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { IoIosEye, IoIosEyeOff } from "react-icons/io"; // Import eye icons
+
+function Login() {
+  const [showPassword, setShowPassword] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  const onSubmit = (data) => console.log(data);
+
+  return (
+    <>
+      <dialog id="my_modal_45" className="modal modal-bottom sm:modal-middle">
+        <div className="modal-box bg-emerald-400/90 dark:bg-emerald-600/80 shadow-xl rounded-xl p-4 sm:p-6 md:p-8">
+          {/* Close button (separate from form) */}
+          <form method="dialog">
+            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-gray-800 dark:text-white">
+              ✕
+            </button>
+          </form>
+
+          {/* Header */}
+          <h3 className="font-bold text-2xl text-center text-gray-800 dark:text-white">
+            Sign In
+          </h3>
+          <p className="py-2 text-center text-gray-700 dark:text-gray-200">
+            Welcome back! Please enter your details.
+          </p>
+
+          {/* Login Form - single form element */}
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
+            {/* Email */}
+            <div>
+              <label className="label text-sm font-medium text-black dark:text-gray-200">
+                Email
+              </label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="input input-bordered w-full bg-white/90 dark:bg-gray-700/90 dark:text-white"
+                {...register("email", { required: "Email is required" })}
+              />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+            </div>
+
+            {/* Password */}
+            <div className="relative mb-4"> {/* Added mb-4 for spacing */}
+              <label className="label text-sm font-medium text-black dark:text-gray-200">
+                Password
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  className="input input-bordered w-full bg-white/90 dark:bg-gray-700/90 dark:text-white pr-10" /* Added pr-10 */
+                  {...register("password", {
+                    required: "Password is required", 
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters"
+                    }
+                  })} 
+
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 z-10 cursor-pointer" /* Removed transform, added z-10 */
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <IoIosEye className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" />
+                  ) : (
+                    <IoIosEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" />
+                  )}
+                </button>
+              </div>
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+            </div>
+
+            {/* Submit Button */}
+            <div className="mt-4">
+              <button
+                type="submit"
+                className="btn btn-primary w-full bg-cyan-600 dark:bg-cyan-600 dark:text-black text-black dark:border-emerald-700 border-emerald-700"
+              >
+                Sign In
+              </button>
+            </div>
+
+          </form>
+
+          {/* Footer */}
+          <p className="text-sm text-center mt-4 text-black dark:text-gray-200">
+            Don't have an account?{" "}
+            <Link
+              to="/SignUp"
+              className="font-semibold text-blue-600 dark:text-blue-300 hover:underline"
+              onClick={() => document.getElementById('my_modal_45').close()}
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
+
+        {/* Modal backdrop */}
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    </>
+  );
+}
+
+export default Login;
