@@ -8,11 +8,14 @@ import Login from "./Login";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io"; // Import eye icons
+import imageCompression from "browser-image-compression";
 
 function SignUp() {
   // State for password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [signupError, setSignupError] = useState("");
+  const [signupSuccess, setSignupSuccess] = useState("");
 
   const {
     register,
@@ -21,8 +24,82 @@ function SignUp() {
     formState: { errors },
     setValue
   } = useForm();
+  // ⭐ added: Cloudinary details
+  const CLOUD_NAME = "dzdr5eyt2";   // replace with your cloud name
+  const UPLOAD_PRESET = "demotest";       // your unsigned preset
 
-  const onSubmit = (data) => console.log(data);
+  // ⭐ added: upload function
+  const uploadImageToCloudinary = async (file) => {
+    try {
+      // Compress large files
+      const options = {
+        maxSizeMB: 2, // limit to 2MB
+        maxWidthOrHeight: 1024, // resize if larger than 1024px
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(file, options);
+
+      const formData = new FormData();
+      formData.append("file", compressedFile);
+      formData.append("upload_preset", UPLOAD_PRESET);
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      return res.json();
+    } catch (error) {
+      console.error("Image upload error:", error);
+      throw error;
+    }
+  };
+
+  // With this:
+  const onSubmit = async (data) => {
+    try {
+      setSignupError("");
+      setSignupSuccess("");
+
+      // Remove confirmPassword from data before sending to server
+      const { confirmPassword, profilePicture, ...userData } = data;
+
+      // ⭐ Upload image first if selected
+      if (profilePicture && profilePicture.length > 0) {
+        const uploadRes = await uploadImageToCloudinary(profilePicture[0]);
+        userData.avatar = uploadRes.secure_url; // add Cloudinary URL to data
+      }
+
+      const response = await fetch("http://localhost:4002/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSignupSuccess("Account created successfully! You can now login.");
+        // Reset form
+        setValue("name", "");
+        setValue("email", "");
+        setValue("birthDate", null);
+        setValue("password", "");
+        setValue("confirmPassword", "");
+        setValue("profilePicture", null); // ⭐ reset file
+      } else {
+        setSignupError(result.message || "Registration failed");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setSignupError("Network error. Please try again.");
+    }
+  };
 
   const handleDateChange = (date) => {
     setValue("birthDate", date); // Update react-hook-form value
@@ -45,6 +122,18 @@ function SignUp() {
             </div>
 
             {/* Form */}
+            {/* ⭐ Profile Picture */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Profile Picture
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                {...register("profilePicture")}
+                className="w-full px-2 py-2 border rounded-lg dark:bg-gray-700 dark:text-white"
+              />
+            </div>
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
               {/* Name */}
               <div>
@@ -172,6 +261,9 @@ function SignUp() {
                   <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
                 )}
               </div>
+              {/* Display success/error messages */}
+              {signupSuccess && <p className="text-green-500 text-xs mt-1 text-center">{signupSuccess}</p>}
+              {signupError && <p className="text-red-500 text-xs mt-1 text-center">{signupError}</p>}
 
               <button
                 type="submit"

@@ -1,18 +1,48 @@
 import React from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+
 import { IoIosEye, IoIosEyeOff } from "react-icons/io"; // Import eye icons
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data) => {
+    try {
+      setLoginError("");
+      const response = await fetch("http://localhost:4002/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Store user data in localStorage
+        localStorage.setItem("user", JSON.stringify(result));
+        console.log("Login successful:", result);
+        // Close the modal
+        document.getElementById('my_modal_45').close();
+        // Reload the page to update the UI based on login status
+        window.location.reload();
+      } else {
+        setLoginError(result.message || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setLoginError("Network error. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -60,12 +90,12 @@ function Login() {
                   placeholder="Enter your password"
                   className="input input-bordered w-full bg-white/90 dark:bg-gray-700/90 dark:text-white pr-10" /* Added pr-10 */
                   {...register("password", {
-                    required: "Password is required", 
+                    required: "Password is required",
                     minLength: {
                       value: 6,
                       message: "Password must be at least 6 characters"
                     }
-                  })} 
+                  })}
 
                 />
                 <button
@@ -82,6 +112,8 @@ function Login() {
               </div>
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
+            {/* Display login error */}
+            {loginError && <p className="text-red-500 text-xs mt-1 text-center">{loginError}</p>}
 
             {/* Submit Button */}
             <div className="mt-4">

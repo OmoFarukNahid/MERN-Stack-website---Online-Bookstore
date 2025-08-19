@@ -4,7 +4,8 @@ import Login from "./Login";
 
 function Navbar() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
-  const element = document.documentElement; // fix: ensure element is defined
+  const element = document.documentElement;
+  const [user, setUser] = useState(null);
 
   // Handle theme switching
   useEffect(() => {
@@ -17,22 +18,30 @@ function Navbar() {
     }
   }, [theme, element]);
 
+  // Check if user is logged in
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
   const location = useLocation();
-  const isHome = location.pathname === "/"; // true only on Home page
+  const isHome = location.pathname === "/";
 
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   // Handle hide/show navbar on scroll (only on Home page)
   useEffect(() => {
-    if (!isHome) return; // disable scroll behavior on non-Home pages
+    if (!isHome) return;
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setIsVisible(false); // hide when scrolling down
+        setIsVisible(false);
       } else {
-        setIsVisible(true); // show when scrolling up
+        setIsVisible(true);
       }
       setLastScrollY(currentScrollY);
     };
@@ -41,10 +50,17 @@ function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, isHome]);
 
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    window.location.reload();
+  };
+
   const navItems = (
     <>
-      <li><Link to="/">Home</Link></li> {/* Changed from <a> to <Link> */}
-      <li><Link to="/Course">Course</Link></li> {/* Changed from <a> to <Link> */}
+      <li><Link to="/">Home</Link></li>
+      <li><Link to="/Course">Course</Link></li>
       <li><a>Contact</a></li>
       <li><a>About</a></li>
     </>
@@ -145,14 +161,55 @@ function Navbar() {
           </label>
         </div>
 
-        {/* Login Button */}
-        <div>
-          <a className="bg-black text-white px-3 py-2 rounded-md hover:bg-slate-700 duration-300 cursor-pointer"
-          onClick={() => document.getElementById('my_modal_45').showModal()}>
-            Login
-          </a>
-          <Login/>
-        </div>
+        {/* User Profile or Login Button */}
+        {user ? (
+          <div className="dropdown dropdown-end">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-circle avatar"
+            >
+              <div className="w-10 rounded-full bg-primary text-white flex items-center justify-center overflow-hidden">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-lg font-bold">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </div>
+            <ul
+              tabIndex={0}
+              className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
+            >
+              <li>
+                <span className="justify-between">
+                  {user.name}
+                  <span className="badge">User</span>
+                </span>
+              </li>
+              <li>
+                <a>Settings</a>
+              </li>
+              <li>
+                <button onClick={handleLogout}>Logout</button>
+              </li>
+            </ul>
+          </div>
+        ) : (
+          <div>
+            <a className="bg-black text-white px-3 py-2 rounded-md hover:bg-slate-700 duration-300 cursor-pointer"
+              onClick={() => document.getElementById('my_modal_45').showModal()}>
+              Login
+            </a>
+            <Login />
+          </div>
+        )}
       </div>
     </div>
   );
